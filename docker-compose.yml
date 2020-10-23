@@ -1,0 +1,24 @@
+version: "3.7"
+
+services:
+  deno:
+    image: "deno-docker-mis"
+    container_name: deno.js
+    build: .
+    volumes:
+      - ./uploads:/app/uploads
+      - ./uploadplan:/app/uploadplan
+      - ./Rolefile:/app/Rolefile
+      - ./Kpimain:/app/Kpimain
+      - ./Kpiminor:/app/Kpiminor
+      - ./uploadhistory:/app/uploadhistory
+    ports:
+      - "8000:8000"
+    networks:
+      - deno
+volumes:
+  uploads:
+    driver: local
+
+networks:
+  deno: {}

@@ -1,0 +1,124 @@
+
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZG1pbiIsImV4cCI6MTU5ODkxNzU5NDY5OH0.Dxn3DljoPoK6cy7QYcEDRlTNHSIS8Xy9sY6jQHmkPtA
+### Login
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+  "name": "Admin",
+  "username": "admin",
+  "password": "admin",
+  "createby": "admin",
+  "is_Active": "true",
+  "employee_id": "00001"
+}
+
+### GET GetRole
+GET  http://localhost:8000/api/getuserroles/6bb221e8-12a2-4d6f-ad75-2f274f07b863
+
+### GET Testsend
+GET  http://localhost:8000/api/testsend
+
+### GET MACHINE ALL
+GET  http://localhost:8000/api/machineAll
+Authorization: Bearer {{token}}
+
+### GET Sizemachineall
+GET  http://localhost:8000/api/sizeall
+Authorization: Bearer {{token}}
+
+### GET Capacitymachineall
+GET  http://localhost:8000/api/capacityall
+Authorization: Bearer {{token}}
+
+### GET Powermachineall
+GET  http://localhost:8000/api/powerall
+Authorization: Bearer {{token}}
+
+### GET Divisionmachineall
+GET  http://localhost:8000/api/finddivisionall
+Authorization: Bearer {{token}}
+
+### GET Pointmachineall
+GET  http://localhost:8000/api/findpointall
+Authorization: Bearer {{token}}
+
+### GET getmachinedetails
+GET  http://localhost:8000/api/machinedetails
+Authorization: Bearer {{token}}
+
+### GET getmachinedetails
+GET  http://localhost:8000/api/division
+Authorization: Bearer {{token}}
+
+### GET getmachineimage
+GET  http://localhost:8000/api/getimages/KI-TG-ACP-0001
+Authorization: Bearer {{token}}
+
+### POST addmachine
+POST http://localhost:8000/api/createmachinedetails
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Admin",
+  "username": "admin",
+  "password": "admin",
+  "createby": "admin",
+  "is_Active": "true",
+  "employee_id": "00001"
+}
+
+### POST addmachine
+POST http://localhost:8000/api/uploadimage
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data
+
+{
+  "uploads": "test.png"
+}
+
+### POST addmachine
+POST http://localhost:8000/api/uploadimage
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data
+
+{
+  "uploads": "test.png"
+}
+
+
+
+### POST addmachine
+POST http://localhost:8000/api/rolecreate
+Content-Type: multipart/form-data
+
+{
+  "uploads": "test.png"
+}
+
+### POST addmachine
+POST http://localhost:8000/api/roleupdate
+Content-Type: multipart/form-data
+
+{
+  "uploads": "test.png"
+}
+
+### POST addmachine
+POST http://localhost:8000/api/roleread
+Content-Type: multipart/form-data
+
+{
+  "uploads": "test.png"
+}
+
+### POST addmachine
+POST http://localhost:8000/api/roledelete
+Content-Type: multipart/form-data
+
+{
+  "uploads": "test.png"
+}
+
+
