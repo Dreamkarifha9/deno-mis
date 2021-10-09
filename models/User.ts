@@ -1,5 +1,5 @@
 import { dbconfig } from "../config/dbconnect.ts";
-import { Client, QueryResult } from "../deps.ts";
+import { Client, PoolClient, QueryResult, time } from "../deps.ts";
 
 const client = new Client(dbconfig);
 
@@ -15,6 +15,10 @@ export default class User {
   public updateby: string;
   public is_active: boolean = false;
   public roles: string;
+  public json_b: any;
+  public division: string;
+  public permission: any;
+  public refresh_token: string;
 
   constructor({
     user_id = "",
@@ -26,6 +30,9 @@ export default class User {
     updateby = "",
     is_active = false,
     roles = "",
+    division = "",
+    permission = [],
+    refresh_token = "",
   }) {
     this.user_id = user_id;
     this.name = name;
@@ -36,84 +43,107 @@ export default class User {
     this.updateby = updateby;
     this.is_active = is_active;
     this.roles = roles;
+    this.division = division;
+    this.permission = permission;
+    this.refresh_token = refresh_token;
   }
-  static async findByUserId(params: object): Promise<User | null> {
-    const userList: any = new Object();
+  static async findByUserId(params: string): Promise<User | null> {
+    var userList: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      userList = await client.queryObject({
         text: `SELECT * FROM users WHERE user_id = $1;`,
         args: [params],
       });
-      if (result.rows.toString() === "") {
+      if (userList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((u: any) => {
-          result.rowDescription.columns.map((el: any, index: any) => {
-            userList[el.name] = u[index];
-          });
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
-    return User.prepare(userList);
+    return userList.rows;
+  }
+  static async findAll(): Promise<User[] | null> {
+    var userlist: any = new Array();
+
+    await client.connect();
+    try {
+      userlist = await client.queryObject({
+        text: `SELECT * FROM users ;`,
+        args: [],
+      });
+      if (userlist.rows.toString() === "") {
+        return null;
+      }
+    } catch (error) {
+      console.log(error);
+      return null;
+    } finally {
+      await client.end();
+    }
+    return userlist.rows;
+  }
+  static async findtest(params: string): Promise<User | null> {
+    var userList: any = new Object();
+    await client.connect();
+    try {
+      userList = await client.queryObject({
+        text: `SELECT json_b FROM users WHERE username = $1;`,
+        args: [params],
+      });
+      if (userList.rows.toString() === "") {
+        return null;
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      await client.end();
+    }
+    return userList.rows;
   }
   static async findByUsername(params: object): Promise<User | null> {
-    const userList: any = new Object();
+    var userList: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      userList = await client.queryObject({
         text: `SELECT * FROM users WHERE username = $1;`,
         args: [params],
       });
-      if (result.rows.toString() === "") {
+      if (userList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((u: any) => {
-          result.rowDescription.columns.map((el: any, index: any) => {
-            userList[el.name] = u[index];
-          });
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
-    return User.prepare(userList);
+    return userList.rows;
   }
   static async findByUserrole(id: string): Promise<User | null> {
-    const userList: any = new Object();
+    var userList: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      userList = await client.queryObject({
         text: `SELECT roles FROM users WHERE user_id = $1;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (userList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((u: any) => {
-          result.rowDescription.columns.map((el: any, index: any) => {
-            userList[el.name] = u[index];
-          });
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
-    return User.prepare(userList);
+    return userList.rows;
   }
   // static async findByUsername(params: string): Promise<User | null> {
   //   const userList: any = new Object();
   //   console.log(params);
   //   try {
-  //     await client.connect();
+  //
   //     const result = await client.query({
   //       text: "SELECT * FROM users WHERE username = $1 ;",
   //       args: [params],
@@ -128,41 +158,101 @@ export default class User {
   //       });
   //     }
   //   } catch (error) {
-  //     console.log(error.toString());
+  //     console.log(error);
   //   } finally {
   //     await client.end();
   //   }
   //   return User.prepare(userList);
   // }
   async save() {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text: `INSERT INTO users (user_id, name, username,
                password, employee_id, createdate, createby,
-                updatedate, updateby, is_active)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10);`,
+                updatedate, updateby, is_active, division)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11);`,
         args: [
           this.user_id,
           this.name,
           this.username,
           this.password,
           this.employee_id,
-          this.createdate,
+          time().tz("asia/Jakarta").t,
           this.createby,
-          this.updatedate,
+          time().tz("asia/Jakarta").t,
           this.updateby,
           this.is_active,
+          this.division,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
     return this;
   }
-  static prepare(data: any) {
-    return data;
+
+  async updaterefresh_token() {
+    await client.connect();
+    try {
+      const result: QueryResult = await client.queryObject({
+        text:
+          `UPDATE users SET refresh_token=$1, updatedate=$2, updateby=$3 WHERE user_id=$4;`,
+        args: [
+          this.refresh_token,
+          time().tz("asia/Jakarta").t,
+          this.updateby,
+          this.user_id,
+        ],
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      await client.end();
+    }
+    return this;
+  }
+
+  async updatepassword() {
+    await client.connect();
+    try {
+      const result: QueryResult = await client.queryObject({
+        text:
+          `UPDATE users SET password=$1, updatedate=$2, updateby=$3 WHERE user_id=$4;`,
+        args: [
+          this.password,
+          time().tz("asia/Jakarta").t,
+          this.updateby,
+          this.user_id,
+        ],
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      await client.end();
+    }
+    return this;
+  }
+  async update() {
+    await client.connect();
+    try {
+      const result: QueryResult = await client.queryObject({
+        text:
+          `UPDATE users SET permission=$1, updatedate=$2, updateby=$3 WHERE user_id=$4;`,
+        args: [
+          JSON.stringify(this.permission),
+          time().tz("asia/Jakarta").t,
+          this.updateby,
+          this.user_id,
+        ],
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      await client.end();
+    }
+    return this;
   }
 }

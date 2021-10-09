@@ -1,5 +1,5 @@
 import { dbconfig } from "../config/dbconnect.ts";
-import { Client, QueryResult } from "../deps.ts";
+import { Client, PoolClient, QueryResult, time } from "../deps.ts";
 
 const client = new Client(dbconfig);
 export default class Machine {
@@ -25,6 +25,8 @@ export default class Machine {
     public machineinclude: string,
     public genration: string,
     public energy: string,
+    public machinegroupid: number,
+    public fis_refcode: string,
     public create_date: Date | null,
     public create_by: string,
     public update_date: Date | null,
@@ -32,73 +34,140 @@ export default class Machine {
   ) {
   }
   static async findOne(id: string): Promise<Machine | null> {
-    const MachineList: any = new Object();
+    var MachineList: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      MachineList = await client.queryObject({
         text: `SELECT idmachine FROM historymachine WHERE idmachine =$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (MachineList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p) => {
-          // let obj: any = new Object()
-          result.rowDescription.columns.map((el, i) => {
-            MachineList[el.name] = p[i];
-          });
-          // customerList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return Machine.prepare(MachineList);
+    return MachineList.rows;
   }
-  static async findAll(): Promise<Machine[] | null> {
-    const MachineList: any = new Array();
+
+  static async findAllidMachinegroupid(id: string): Promise<Machine[] | null> {
+    var MachineList: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      MachineList = await client.queryObject({
         text:
-          `SELECT * FROM public.historymachine LEFT JOIN division on historymachine.division = division.id
-          LEFT JOIN size on historymachine.sizemachine = size.id
-          LEFT JOIN capacity on historymachine.capacity = capacity.id
-          LEFT JOIN power on historymachine.power = power.id ORDER BY idmachine ASC ;`,
+          `SELECT idmachine,namethai,machinegroupid FROM historymachine where historymachine.machinegroupid = $1
+          ORDER BY idmachine ASC  ;`,
+        args: [id],
+      });
+      if (MachineList.rows.toString() === "") {
+        return null;
+      }
+    } catch (error) {
+      console.log(error);
+      return null;
+    } finally {
+      await client.end();
+    }
+    return MachineList.rows;
+  }
+
+  static async findAllidDivision(id: string): Promise<Machine[] | null> {
+    var MachineList: any = new Array();
+    await client.connect();
+    try {
+      MachineList = await client.queryObject({
+        text:
+          `SELECT historymachines.idmachine,historymachines.namethai,historymachines.division,historymachines.nameeng,historymachines.point,historymachines.model,
+          historymachines.nummachine, historymachines.sizemachine, historymachines.energy, historymachines.usejob, historymachines.capability,historymachines.manufacturer,
+          historymachines.machineinclude, historymachines.genration,historymachines.machinegroupid, size.sizename, capacity.capacityname, 
+          power.powername, division.divisionname FROM historymachine as historymachines LEFT JOIN division on historymachines.division = division.id
+                    LEFT JOIN size on historymachines.sizemachine = size.id
+                    LEFT JOIN capacity on historymachines.capacity = capacity.id
+                    LEFT JOIN power on historymachines.power = power.id
+                   WHERE  historymachines.division = $1
+                    ORDER BY idmachine ASC ;`,
+        args: [id],
+      });
+      if (MachineList.rows.toString() === "") {
+        return null;
+      }
+    } catch (error) {
+      console.log(error);
+      return null;
+    } finally {
+      await client.end();
+    }
+    return MachineList.rows;
+  }
+
+  static async findAll(): Promise<Machine[] | null> {
+    var MachineList: any = new Object();
+    await client.connect();
+    try {
+      MachineList = await client.queryObject({
+        text:
+          `SELECT historymachines.idmachine,historymachines.namethai,historymachines.division,historymachines.nameeng,historymachines.point,historymachines.model,
+          historymachines.nummachine, historymachines.sizemachine, historymachines.energy, historymachines.usejob, historymachines.capability,historymachines.manufacturer,
+          historymachines.machineinclude, historymachines.genration,historymachines.machinegroupid, size.sizename, capacity.capacityname, 
+          power.powername, division.divisionname FROM historymachine as historymachines LEFT JOIN division on historymachines.division = division.id
+                    LEFT JOIN size on historymachines.sizemachine = size.id
+                    LEFT JOIN capacity on historymachines.capacity = capacity.id
+                    LEFT JOIN power on historymachines.power = power.id ORDER BY idmachine ASC ;`,
         args: [],
       });
-      if (result.rows.toString() === "") {
+      if (MachineList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p: any, j: any) => {
-          let obj: any = new Object();
-          result.rowDescription.columns.map((el: any, i: any) => {
-            obj.index = j + 1;
-            obj[el.name] = p[i];
-          });
-          MachineList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return MachineList.map((mahine: any) => Machine.prepare(mahine));
+
+    return MachineList.rows;
+  }
+
+  static async findfristpage(): Promise<Machine[] | null> {
+    var MachineList: any = new Object();
+    await client.connect();
+    try {
+      MachineList = await client.queryObject({
+        text:
+          `SELECT historymachines.idmachine,historymachines.namethai,historymachines.division,historymachines.nameeng,historymachines.point,historymachines.model,
+      historymachines.nummachine, historymachines.sizemachine, historymachines.energy, historymachines.usejob, historymachines.capability,historymachines.manufacturer,
+      historymachines.machineinclude, historymachines.genration,historymachines.machinegroupid, size.sizename, capacity.capacityname, 
+      power.powername, division.divisionname FROM historymachine as historymachines LEFT JOIN division on historymachines.division = division.id
+                LEFT JOIN size on historymachines.sizemachine = size.id
+                LEFT JOIN capacity on historymachines.capacity = capacity.id
+                LEFT JOIN power on historymachines.power = power.id ORDER BY idmachine DESC LIMIT 15;`,
+        args: [],
+      });
+      if (MachineList.rows.toString() === "") {
+        return null;
+      }
+    } catch (error) {
+      console.log(error);
+      return null;
+    } finally {
+      await client.end();
+    }
+
+    return MachineList.rows;
   }
   async create() {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text:
           `INSERT INTO historymachine (idmachine,namethai, nameeng, sizemachine, capacity,
   power, division,point,model,nummachine,usejob,capability,manufacturer,machineinclude,
-  genration,energy,create_date,create_by)
-          VALUES ($1, $2, $3, $4, $5, $6, $7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18);`,
+  genration,energy,create_date,create_by,machinegroupid)
+          VALUES ($1, $2, $3, $4, $5, $6, $7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19);`,
         args: [
           this.idmachine,
           this.namethai,
@@ -116,18 +185,19 @@ export default class Machine {
           this.machineinclude,
           this.genration,
           this.energy,
-          this.create_date,
+          time().tz("asia/Jakarta").t,
           this.create_by,
+          this.machinegroupid,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
     return this;
   }
-  async update(
+  static async update(
     idmachine: string,
     namethai: string,
     nameeng: string,
@@ -147,27 +217,9 @@ export default class Machine {
     update_date: Date,
     update_by: string,
   ) {
-    this.idmachine = idmachine;
-    this.namethai = namethai;
-    this.nameeng = nameeng;
-    this.sizemachine = sizemachine;
-    this.capacity = capacity;
-    this.power = power;
-    this.division = division;
-    this.point = point;
-    this.model = model;
-    this.nummachine = nummachine;
-    this.usejob = usejob;
-    this.capability = capability;
-    this.manufacturer = manufacturer;
-    this.machineinclude = machineinclude;
-    this.genration = genration;
-    this.energy = energy;
-    this.update_date = update_date;
-    this.update_by = update_by;
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text:
           `UPDATE historymachine SET idmachine=$1, namethai=$2, nameeng=$3, sizemachine=$4,
 capacity=$5, power=$6,point=$7,model=$8, 
@@ -175,42 +227,42 @@ nummachine=$9, usejob=$10, capability=$11, manufacturer=$12,
 machineinclude=$13, genration=$14, energy=$15, update_date=$16, update_by=$17, division=$18
           WHERE idmachine=$1;`,
         args: [
-          this.idmachine,
-          this.namethai,
-          this.nameeng,
-          this.sizemachine,
-          this.capacity,
-          this.power,
-          this.point,
-          this.model,
-          this.nummachine,
-          this.usejob,
-          this.capability,
-          this.manufacturer,
-          this.machineinclude,
-          this.genration,
-          this.energy,
-          this.update_date,
-          this.update_by,
-          this.division,
+          idmachine,
+          namethai,
+          nameeng,
+          sizemachine,
+          capacity,
+          power,
+          point,
+          model,
+          nummachine,
+          usejob,
+          capability,
+          manufacturer,
+          machineinclude,
+          genration,
+          energy,
+          time().tz("asia/Jakarta").t,
+          update_by,
+          division,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
     return this;
   }
   async delete() {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text: `DELETE FROM historymachine WHERE idmachine=$1;`,
         args: [this.idmachine],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
@@ -234,6 +286,8 @@ machineinclude=$13, genration=$14, energy=$15, update_date=$16, update_by=$17, d
       data.machineinclude,
       data.genration,
       data.energy,
+      data.machinegroupid,
+      data.fis_refcode,
       data.create_date,
       data.create_by,
       data.update_date,

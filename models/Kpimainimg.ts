@@ -1,5 +1,5 @@
 import { dbconfig } from "../config/dbconnect.ts";
-import { Client, QueryResult, Base64 } from "../deps.ts";
+import { Client, PoolClient, QueryResult, time } from "../deps.ts";
 
 const client = new Client(dbconfig);
 
@@ -18,94 +18,69 @@ export default class Kpimainimg {
   }
 
   static async findOneid(id: string, fkid: string): Promise<Kpimainimg | null> {
-    const imagesplanlist: any = new Object();
+    await client.connect();
+    var imagesplanlist: any = new Object();
     try {
-      await client.connect();
-      const result = await client.query({
+      imagesplanlist = await client.queryObject({
         text:
           `SELECT id,fkid,pathimg,filename FROM kpimainimg WHERE filename =$1 AND fkid =$2 ;`,
         args: [id, fkid],
       });
-      if (result.rows.toString() === "") {
+      if (imagesplanlist.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p) => {
-          // let obj: any = new Object()
-          result.rowDescription.columns.map((el, i) => {
-            imagesplanlist[el.name] = p[i];
-          });
-          // customerList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return Kpimainimg.prepare(imagesplanlist);
+    return imagesplanlist.rows;
   }
 
   static async findbyId(id: string): Promise<Kpimainimg | null> {
-    const imagesplanlist: any = new Object();
+    await client.connect();
+    var imagesplanlist: any = new Object();
     try {
-      await client.connect();
-      const result = await client.query({
+      imagesplanlist = await client.queryObject({
         text: `SELECT id,fkid,pathimg,filename FROM kpimainimg WHERE id =$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (imagesplanlist.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p) => {
-          // let obj: any = new Object()
-          result.rowDescription.columns.map((el, i) => {
-            imagesplanlist[el.name] = p[i];
-          });
-          // customerList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return Kpimainimg.prepare(imagesplanlist);
+    return imagesplanlist.rows;
   }
 
   static async findAllbyid(id: string): Promise<Kpimainimg[] | null> {
-    const ImagesList: any = new Array();
+    await client.connect();
+    var ImagesList: any = new Array();
     try {
-      await client.connect();
-      const result = await client.query({
+      ImagesList = await client.queryObject({
         text: `SELECT id,fkid,pathimg,filename FROM kpimainimg WHERE fkid=$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (ImagesList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p: any, j: any) => {
-          let obj: any = new Object();
-          result.rowDescription.columns.map((el: any, i: any) => {
-            obj.index = j;
-            obj[el.name] = p[i];
-          });
-          ImagesList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return ImagesList.map((images: any) => Kpimainimg.prepare(images));
+    return ImagesList.rows;
   }
   async create() {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text:
           `INSERT INTO kpimainimg (id, fkid,pathimg,create_date,create_by,filename)
           VALUES ($1, $2, $3, $4,$5,$6);`,
@@ -113,13 +88,13 @@ export default class Kpimainimg {
           this.id,
           this.fkid,
           this.pathimg,
-          this.create_date,
+          time().tz("asia/Jakarta").t,
           this.create_by,
           this.filename,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
@@ -136,12 +111,11 @@ export default class Kpimainimg {
     this.id = id;
     this.fkid = fkid;
     this.pathimg = pathimg;
-    this.update_date = update_date;
     this.update_by = update_by;
     this.filename = filename;
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text:
           `UPDATE kpimainimg SET id=$1, fkid=$2, pathimg=$3, update_date=$4, update_by=$5, filename=$6
           WHERE idmachine=$1;`,
@@ -149,45 +123,31 @@ export default class Kpimainimg {
           this.id,
           this.fkid,
           this.pathimg,
-          this.update_date,
+          time().tz("asia/Jakarta").t,
           this.update_by,
           this.filename,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
     return this;
   }
-  async delete() {
+  static async delete(id: string): Promise<boolean> {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text: `DELETE FROM kpimainimg WHERE id=$1;`,
-        args: [this.id],
+        args: [id],
       });
+      return true;
     } catch (error) {
-      console.log(error.toString());
+      throw error;
+      console.log(error);
     } finally {
       await client.end();
     }
-    return this;
-  }
-  // method for change return data
-  static prepare(data: any): Kpimainimg {
-    const images = new Kpimainimg(
-      data.id,
-      data.fkid,
-      data.pathimg,
-      data.create_date,
-      data.create_by,
-      data.update_date,
-      data.update_by,
-      data.filename,
-    );
-    images.index = data.index;
-    return images;
   }
 }

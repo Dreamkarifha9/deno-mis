@@ -1,23 +1,153 @@
 
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJhZG1pbiIsImV4cCI6MTU5ODkxNzU5NDY5OH0.Dxn3DljoPoK6cy7QYcEDRlTNHSIS8Xy9sY6jQHmkPtA
+@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJUaGFrb3JuIiwiZXhwIjoxNjI1ODkwNzc1fQ.k9Z_JzGKafNrIA4_xgMcsJSHBheLzyzku1eEc_xug7Y
 ### Login
 POST http://localhost:8000/api/login
 Content-Type: application/json
 
 {
   "name": "Admin",
-  "username": "admin",
-  "password": "admin",
+  "username": "Thakorn",
+  "password": "5775775", 
   "createby": "admin",
   "is_Active": "true",
   "employee_id": "00001"
 }
 
+
+
+
+### POST registeruser
+POST http://localhost:8000/api/register
+Content-Type: application/json
+
+{
+  "username": "Thakorn",
+  "name": "ฐากร หยั่งบุญ",
+  "employee_id": "59046", 
+  "password": "5775775",
+  "createby": "admin",
+  "updateby": null,
+  "is_active": false
+}
+
+### GET getrepairhistorymachineall
+GET  http://localhost:8000/api/repairhistorymachineall/KI-MN-CTU-0851
+Authorization: Bearer {{token}}
+
+
+### GET getmachineactresultMactidAndDodate
+GET  http://localhost:8000/api/machineactresultMactidAndDodate/9492abb6-0e3a-404e-b9b8-b4bd11e8c255/2021-03-16
+Authorization: Bearer {{token}}
+
+
+### GET getmenuall
+GET  http://localhost:8000/api/getpermissiontable
+Authorization: Bearer {{token}}
+
+### GET getmenuall
+GET  http://localhost:8000/api/getmenuall
+Authorization: Bearer {{token}}
+
+
+### GET getmenuchildall
+GET  http://localhost:8000/api/getmenuchildall
+Authorization: Bearer {{token}}
+
+
+### GET Actdetailss1
+GET  http://localhost:8000/api/getpermissionall
+Authorization: Bearer {{token}}
+
+### GET Actdetailss1
+GET  http://localhost:8000/api/getregisteractmachinegroupid/1/2
+Authorization: Bearer {{token}}
+
+### GET Actdetailss1
+GET  http://localhost:8000/api/machineactseason1/KI1-TG-STB-0001
+Authorization: Bearer {{token}}
+
+### GET Actdetailss2
+GET  http://localhost:8000/api/machineactseason2/KI1-TG-STB-0001
+Authorization: Bearer {{token}}
+
+
+### POST addregisteract
+POST http://localhost:8000/api/createregisteracttest
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+[[
+  "TEST03",
+  "เช็คความร้อน",
+  "Admin",
+  {"Result": 0},
+  1,
+  "462d1b6c-2704-49f1-a1bf-c615e34ae231",
+  null,
+  "1. ต้องไม่มีฝุ่นเกาะ"
+],
+[
+  "TEST04",
+  "เช็คความร้อน1",
+  "Admin",
+  {"Result": 0},
+  1,
+  "462d1b6c-2704-49f1-a1bf-c615e34ae444",
+  null,
+  "1. ต้องไม่มีฝุ่นเกาะ"
+]
+]
+
+### POST addregisteract
+POST http://localhost:8000/api/createregisteract
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "actcode": "TEST03",
+  "description": "เช็คความร้อน",
+  "duratypeid": 1,
+  "is_active": true,
+  "machinegroupid": 1,
+  "idmachine": "KI-ML-TTP-0001",
+  "result_json": {"Result": 0},
+  "update_date": null,
+  "update_by": "Admin"
+}
+
+### GET MachineGroupid
+GET  http://localhost:8000/api/machinefinbyid/1
+Authorization: Bearer {{token}}
+
+
+### GET Duratypebyid
+GET  http://localhost:8000/api/duratypes/1
+Authorization: Bearer {{token}}
+
+### GET Duratype
+GET  http://localhost:8000/api/duratype
+Authorization: Bearer {{token}}
+
+### GET Machinegroup
+GET  http://localhost:8000/api/machinegroup
+Authorization: Bearer {{token}}
+
+
+
+### GET Resgisteracts
+GET  http://localhost:8000/api/getregisteracts/2
+Authorization: Bearer {{token}}
+### GET Resgisteract
+GET  http://localhost:8000/api/getregisteract
+Authorization: Bearer {{token}}
+### GET UserTest
+GET  http://localhost:8000/api/testsend
+Authorization: Bearer {{token}}
 ### GET GetRole
 GET  http://localhost:8000/api/getuserroles/6bb221e8-12a2-4d6f-ad75-2f274f07b863
 
 ### GET Testsend
-GET  http://localhost:8000/api/testsend
+GET  http://localhost:8000/api/getjsonb
 
 ### GET MACHINE ALL
 GET  http://localhost:8000/api/machineAll
@@ -54,6 +184,24 @@ Authorization: Bearer {{token}}
 ### GET getmachineimage
 GET  http://localhost:8000/api/getimages/KI-TG-ACP-0001
 Authorization: Bearer {{token}}
+
+### GET getmachineid
+GET  http://localhost:8000/api/machinefinbyid/17
+Authorization: Bearer {{token}}
+
+
+
+### POST addmachineexcel
+POST http://localhost:8000/api/createmachineexcel
+Authorization: Bearer {{token}}
+
+
+### POST addmachinedetailsexcel
+POST http://localhost:8000/api/createmachinedetailsexcel
+Authorization: Bearer {{token}}
+
+
+
 
 ### POST addmachine
 POST http://localhost:8000/api/createmachinedetails

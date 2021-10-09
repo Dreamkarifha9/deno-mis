@@ -1,8 +1,6 @@
 import { dbconfig } from "../config/dbconnect.ts";
-import { Client, QueryResult, Base64 } from "../deps.ts";
-
+import { Client, PoolClient, QueryResult, time } from "../deps.ts";
 const client = new Client(dbconfig);
-
 export default class machineimage {
   public tobase: string = "";
   public index: number = 0;
@@ -19,93 +17,68 @@ export default class machineimage {
   }
 
   static async findOne(id: string): Promise<machineimage | null> {
-    const MachineList: any = new Object();
+    var MachineList: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      MachineList = await client.queryObject({
         text: `SELECT idmachine FROM machineimg WHERE idmachine =$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (MachineList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p) => {
-          // let obj: any = new Object()
-          result.rowDescription.columns.map((el, i) => {
-            MachineList[el.name] = p[i];
-          });
-          // customerList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return machineimage.prepare(MachineList);
+    return MachineList.rows;
   }
   static async findOneid(id: string): Promise<machineimage | null> {
-    const MachineList: any = new Object();
+    var MachineList: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      MachineList = await client.queryObject({
         text: `SELECT id,pathimage FROM machineimg WHERE id =$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (MachineList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p) => {
-          // let obj: any = new Object()
-          result.rowDescription.columns.map((el, i) => {
-            MachineList[el.name] = p[i];
-          });
-          // customerList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return machineimage.prepare(MachineList);
+    return MachineList.rows;
   }
 
   static async findAllbyid(id: string): Promise<machineimage[] | null> {
-    const ImagesList: any = new Array();
+    var ImagesList: any = new Array();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      ImagesList = await client.queryObject({
         text:
           `SELECT id,idmachine,pathimage FROM machineimg WHERE idmachine=$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (ImagesList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p: any, j: any) => {
-          let obj: any = new Object();
-          result.rowDescription.columns.map((el: any, i: any) => {
-            obj.index = j;
-            obj[el.name] = p[i];
-          });
-          ImagesList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return ImagesList.map((images: any) => machineimage.prepare(images));
+    return ImagesList.rows;
   }
   async create() {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text:
           `INSERT INTO machineimg (id,idmachine, pathimage,create_date,create_by)
           VALUES ($1, $2, $3, $4,$5);`,
@@ -113,12 +86,12 @@ export default class machineimage {
           this.id,
           this.idmachine,
           this.pathimage,
-          this.create_date,
+          time().tz("asia/Jakarta").t,
           this.create_by,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
@@ -134,11 +107,10 @@ export default class machineimage {
     this.id = id;
     this.idmachine = idmachine;
     this.pathimage = pathimage;
-    this.update_date = update_date;
     this.update_by = update_by;
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text:
           `UPDATE machineimg SET id=$1, idmachine=$2, pathimage=$3, update_date=$4, update_by=$5
           WHERE idmachine=$1;`,
@@ -146,30 +118,31 @@ export default class machineimage {
           this.id,
           this.idmachine,
           this.pathimage,
-          this.update_date,
+          time().tz("asia/Jakarta").t,
           this.update_by,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
     return this;
   }
-  async delete() {
+  static async delete(id: string): Promise<boolean> {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text: `DELETE FROM machineimg WHERE id=$1;`,
-        args: [this.id],
+        args: [id],
       });
+      return true;
     } catch (error) {
-      console.log(error.toString());
+      throw error;
+      console.log(error);
     } finally {
       await client.end();
     }
-    return this;
   }
   // method for change return data
   static prepare(data: any): machineimage {

@@ -1,5 +1,5 @@
 import { dbconfig } from "../config/dbconnect.ts";
-import { Client, QueryResult, Base64 } from "../deps.ts";
+import { Client, PoolClient, QueryResult, time } from "../deps.ts";
 
 const client = new Client(dbconfig);
 
@@ -24,94 +24,69 @@ export default class Planningimg {
     pathimage: string,
     seasonid: number,
   ): Promise<Planningimg | null> {
-    const MachineList: any = new Object();
+    var MachineList: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      MachineList = await client.queryObject({
         text:
           `SELECT idmachine,pathimage,seasonid FROM planningimg WHERE idmachine =$1 AND pathimage =$2 AND seasonid =$3 ;`,
         args: [idmachine, pathimage, seasonid],
       });
-      if (result.rows.toString() === "") {
+      if (MachineList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p) => {
-          // let obj: any = new Object()
-          result.rowDescription.columns.map((el, i) => {
-            MachineList[el.name] = p[i];
-          });
-          // customerList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return Planningimg.prepare(MachineList);
+    return MachineList.rows;
   }
   static async findOneid(id: string): Promise<Planningimg | null> {
-    const imagesplanlist: any = new Object();
+    var imagesplanlist: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      imagesplanlist = await client.queryObject({
         text: `SELECT id,pathimage FROM planningimg WHERE id =$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (imagesplanlist.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p) => {
-          // let obj: any = new Object()
-          result.rowDescription.columns.map((el, i) => {
-            imagesplanlist[el.name] = p[i];
-          });
-          // customerList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return Planningimg.prepare(imagesplanlist);
+    return imagesplanlist.rows;
   }
 
   static async findAllbyid(id: string): Promise<Planningimg[] | null> {
-    const ImagesList: any = new Array();
+    var ImagesList: any = new Array();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      ImagesList = await client.queryObject({
         text:
           `SELECT id,idmachine,pathimage,seasonid FROM planningimg WHERE idmachine=$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (ImagesList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p: any, j: any) => {
-          let obj: any = new Object();
-          result.rowDescription.columns.map((el: any, i: any) => {
-            obj.index = j;
-            obj[el.name] = p[i];
-          });
-          ImagesList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return ImagesList.map((images: any) => Planningimg.prepare(images));
+    return ImagesList.rows;
   }
   async create() {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text:
           `INSERT INTO planningimg (id, pathimage,seasonid,create_date,create_by,idmachine)
           VALUES ($1, $2, $3, $4,$5,$6);`,
@@ -119,13 +94,13 @@ export default class Planningimg {
           this.id,
           this.pathimage,
           this.seasonid,
-          this.create_date,
+          time().tz("asia/Jakarta").t,
           this.create_by,
           this.idmachine,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
@@ -141,11 +116,10 @@ export default class Planningimg {
     this.id = id;
     this.idmachine = idmachine;
     this.pathimage = pathimage;
-    this.update_date = update_date;
     this.update_by = update_by;
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text:
           `UPDATE machineimg SET id=$1, idmachine=$2, pathimage=$3, update_date=$4, update_by=$5
           WHERE idmachine=$1;`,
@@ -153,45 +127,29 @@ export default class Planningimg {
           this.id,
           this.idmachine,
           this.pathimage,
-          this.update_date,
+          time().tz("asia/Jakarta").t,
           this.update_by,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
     return this;
   }
   async delete() {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text: `DELETE FROM planningimg WHERE id=$1;`,
         args: [this.id],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
     return this;
-  }
-  // method for change return data
-  static prepare(data: any): Planningimg {
-    const images = new Planningimg(
-      data.id,
-      data.idmachine,
-      data.pathimage,
-      data.seasonid,
-      data.create_date,
-      data.create_by,
-      data.update_date,
-      data.update_by,
-    );
-    images.tobase = data.tobase;
-    images.index = data.index;
-    return images;
   }
 }

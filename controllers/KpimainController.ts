@@ -10,6 +10,39 @@ export class KpimainController {
       ctx.response.body = kpimainall;
     }
   }
+  async getFristpage(ctx: RouterContext) {
+    const kpimainall = await Kpimain.findFristpage();
+    if (kpimainall) {
+      ctx.response.status = 200;
+      ctx.response.body = kpimainall;
+    }
+  }
+  async getdivision_status(ctx: RouterContext) {
+    const division_status = Boolean(ctx.params.id!);
+
+    const kpimainall = await Kpimain.findAlldivision_status(division_status);
+    if (kpimainall) {
+      ctx.response.status = 200;
+      ctx.response.body = kpimainall;
+    }
+  }
+  async getdivision_statusall(ctx: RouterContext) {
+    const division_status = Boolean(ctx.params.id!);
+
+    const kpimainall = await Kpimain.findAlldivision_statusall(division_status);
+    if (kpimainall) {
+      ctx.response.status = 200;
+      ctx.response.body = kpimainall;
+    }
+  }
+  async getAlldivision(ctx: RouterContext) {
+    const id: string = ctx.params.id!;
+    const kpimainall = await Kpimain.findAlldivision(id);
+    if (kpimainall) {
+      ctx.response.status = 200;
+      ctx.response.body = kpimainall;
+    }
+  }
   async createkpaimain(ctx: RouterContext) {
     const body = await ctx.request.body();
     const value = await body.value;
@@ -18,6 +51,9 @@ export class KpimainController {
     const condatecurrent = new Date(datecurrent);
     const create_date = new Date();
     const create_by = value.create_by;
+    const division_fk = value.division_fk;
+    const division_status = value.division_status;
+    const division_statusall = value.division_statusall;
     const kpimain = new Kpimain(
       id,
       condatecurrent,
@@ -25,9 +61,15 @@ export class KpimainController {
       create_by,
       null,
       "",
+      division_fk,
+      division_status,
+      division_statusall,
     );
 
-    const kpimainall: Kpimain | null = await Kpimain.findOne(condatecurrent);
+    const kpimainall: Kpimain | null = await Kpimain.findOne(
+      condatecurrent,
+      division_fk,
+    );
     if (!kpimainall) {
       await kpimain.createkpimain();
 
@@ -44,6 +86,7 @@ export class KpimainController {
     const result = await ctx.request.body({ type: "form-data" });
     const formdata = await result.value.read({ maxSize: 5000000 });
     let list: any = [];
+
     formdata.files?.forEach((element) => {
       list.push(element.originalName);
     });
@@ -127,11 +170,16 @@ export class KpimainController {
       ctx.response.body = { message: "Invalid ID" };
       return;
     }
-    await kpimaininimg.delete();
-    const imageFilePath = "Kpimain";
-    const fullfilepath = `${imageFilePath}/${kpimaininimg.pathimg}`;
-    await Deno.remove(fullfilepath);
-    ctx.response.status = 200;
+    try {
+      const result = await Kpimainimg.delete(id);
+      if (!result) return;
+      const imageFilePath = "Kpimain";
+      const fullfilepath = `${imageFilePath}/${kpimaininimg.pathimg}`;
+      await Deno.remove(fullfilepath);
+      ctx.response.status = 200;
+    } catch (error) {
+      ctx.response.status = 404;
+    }
   }
 
   async updatekpimain(ctx: RouterContext) {
@@ -143,6 +191,9 @@ export class KpimainController {
       const condatecurrent = new Date(datecurrent);
       const update_date = new Date();
       const update_by = value.update_by;
+      const diviosion_fk = value.division_fk;
+      const division_status = value.division_status;
+      const division_statusall = value.division_statusall;
       const kpimainupedit = new Kpimain(
         id,
         condatecurrent,
@@ -150,11 +201,23 @@ export class KpimainController {
         update_by,
         null,
         "",
+        diviosion_fk,
+        division_status,
+        division_statusall,
       );
-      const kpimain: Kpimain | null = await Kpimain.findOne(condatecurrent);
+      const kpimain: Kpimain | null = await Kpimain.findOne(
+        condatecurrent,
+        diviosion_fk,
+      );
 
       if (!kpimain) {
-        kpimainupedit.updatekpimain(id, datecurrent, update_date, update_by);
+        kpimainupedit.updatekpimain(
+          id,
+          datecurrent,
+          update_date,
+          update_by,
+          division_status,
+        );
 
         ctx.response.status = 201;
         ctx.response.body = kpimain;

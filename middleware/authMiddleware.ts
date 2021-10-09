@@ -1,10 +1,9 @@
-import { RouterContext, validateJwt, upload, httpErrors } from "../deps.ts";
+import { RouterContext, validateJwt } from "../deps.ts";
 import User from "../models/User.ts";
 import key from "../config/key.ts";
 
 export const authMiddleware = async (ctx: RouterContext, next: Function) => {
   const headers = ctx.request.headers;
-  console.log("middleware");
 
   const authorization = headers.get("Authorization");
   if (!authorization) {

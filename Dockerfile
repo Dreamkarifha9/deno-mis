@@ -1,6 +1,6 @@
-FROM hayd/alpine-deno:1.3.0
+FROM hayd/alpine-deno:1.5.2
 
-EXPOSE 7000
+EXPOSE 8000
 
 WORKDIR /app
 

@@ -1,20 +1,20 @@
-import { httpErrors, Router, RouterContext, upload } from "../deps.ts";
+import { Router, RouterContext } from "../deps.ts";
 import {
   Context,
   GetRoleCreate,
+  GetRoleDelete,
   GetRoleRead,
   GetRoleUpdate,
-  GetRoleDelete,
 } from "./../types.ts";
 import {
   hasUserRoleCreate,
-  hasUserRoleUpdate,
-  hasUserRoleRead,
   hasUserRoleDelete,
+  hasUserRoleRead,
+  hasUserRoleUpdate,
 } from "../helpers/roles.ts";
 
 /**
- * has user role middleware 
+ * has user role middleware
  * checks authorization for context user, user roles
  */
 const GuardCreate = () => {
@@ -25,7 +25,6 @@ const GuardCreate = () => {
     if (listroles) {
       const role = JSON.parse(listroles);
       const roles = await GetRoleCreate();
-      console.log(roles);
       //if roles specified, then check auth user's roles
       if (roles != undefined) {
         const isRoleMatched = hasUserRoleCreate(role, roles);
@@ -131,4 +130,4 @@ const GuardDelete = () => {
   };
 };
 
-export { GuardCreate, GuardUpdater, GuardRead, GuardDelete };
+export { GuardCreate, GuardDelete, GuardRead, GuardUpdater };

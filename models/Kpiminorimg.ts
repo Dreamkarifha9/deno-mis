@@ -1,5 +1,5 @@
 import { dbconfig } from "../config/dbconnect.ts";
-import { Client, QueryResult, Base64 } from "../deps.ts";
+import { Client, PoolClient, QueryResult, time } from "../deps.ts";
 
 const client = new Client(dbconfig);
 
@@ -21,95 +21,70 @@ export default class Kpiminorimg {
     id: string,
     fkid: string,
   ): Promise<Kpiminorimg | null> {
-    const Kpiminorimglist: any = new Object();
+    var Kpiminorimglist: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      Kpiminorimglist = await client.queryObject({
         text:
           `SELECT id,fkid,pathimg,filename FROM kpiminorimg WHERE filename =$1 AND fkid =$2 ;`,
         args: [id, fkid],
       });
-      if (result.rows.toString() === "") {
+      if (Kpiminorimglist.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p) => {
-          // let obj: any = new Object()
-          result.rowDescription.columns.map((el, i) => {
-            Kpiminorimglist[el.name] = p[i];
-          });
-          // customerList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return Kpiminorimg.prepare(Kpiminorimglist);
+    return Kpiminorimglist.rows;
   }
 
   static async findbyId(id: string): Promise<Kpiminorimg | null> {
-    const Kpiminorimglist: any = new Object();
+    var Kpiminorimglist: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      Kpiminorimglist = await client.queryObject({
         text: `SELECT id,fkid,pathimg,filename FROM kpiminorimg WHERE id =$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (Kpiminorimglist.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p) => {
-          // let obj: any = new Object()
-          result.rowDescription.columns.map((el, i) => {
-            Kpiminorimglist[el.name] = p[i];
-          });
-          // customerList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return Kpiminorimg.prepare(Kpiminorimglist);
+    return Kpiminorimglist.rows;
   }
 
   static async findAllbyid(id: string): Promise<Kpiminorimg[] | null> {
-    const Kpiminorimglist: any = new Array();
+    await client.connect();
+    var Kpiminorimglist: any = new Array();
     try {
-      await client.connect();
-      const result = await client.query({
+      Kpiminorimglist = await client.queryObject({
         text:
           `SELECT id,fkid,pathimg,filename FROM kpiminorimg WHERE fkid=$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (Kpiminorimglist.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p: any, j: any) => {
-          let obj: any = new Object();
-          result.rowDescription.columns.map((el: any, i: any) => {
-            obj.index = j;
-            obj[el.name] = p[i];
-          });
-          Kpiminorimglist.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return Kpiminorimglist.map((images: any) => Kpiminorimg.prepare(images));
+    return Kpiminorimglist.rows;
   }
   async create() {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text:
           `INSERT INTO kpiminorimg (id, fkid,pathimg,create_date,create_by,filename)
           VALUES ($1, $2, $3, $4,$5,$6);`,
@@ -117,13 +92,13 @@ export default class Kpiminorimg {
           this.id,
           this.fkid,
           this.pathimg,
-          this.create_date,
+          time().tz("asia/Jakarta").t,
           this.create_by,
           this.filename,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
@@ -140,12 +115,11 @@ export default class Kpiminorimg {
     this.id = id;
     this.fkid = fkid;
     this.pathimg = pathimg;
-    this.update_date = update_date;
     this.update_by = update_by;
     this.filename = filename;
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text:
           `UPDATE kpiminorimg SET id=$1, fkid=$2, pathimg=$3, update_date=$4, update_by=$5, filename=$6
           WHERE idmachine=$1;`,
@@ -153,45 +127,30 @@ export default class Kpiminorimg {
           this.id,
           this.fkid,
           this.pathimg,
-          this.update_date,
+          time().tz("asia/Jakarta").t,
           this.update_by,
           this.filename,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
     return this;
   }
   async delete() {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text: `DELETE FROM kpiminorimg WHERE id=$1;`,
         args: [this.id],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
     return this;
-  }
-  // method for change return data
-  static prepare(data: any): Kpiminorimg {
-    const images = new Kpiminorimg(
-      data.id,
-      data.fkid,
-      data.pathimg,
-      data.create_date,
-      data.create_by,
-      data.update_date,
-      data.update_by,
-      data.filename,
-    );
-    images.index = data.index;
-    return images;
   }
 }

@@ -1,5 +1,5 @@
 import { dbconfig } from "../config/dbconnect.ts";
-import { Client, QueryResult } from "../deps.ts";
+import { Client, PoolClient, QueryResult, time } from "../deps.ts";
 
 const client = new Client(dbconfig);
 export default class Kpiminor {
@@ -14,64 +14,47 @@ export default class Kpiminor {
   ) {
   }
   static async findOne(id: Date): Promise<Kpiminor | null> {
-    const KpiminorList: any = new Object();
+    var KpiminorList: any = new Object();
+    await client.connect();
     try {
-      await client.connect();
-      const result = await client.query({
+      KpiminorList = await client.queryObject({
         text: `SELECT datecurrent FROM kpiminor WHERE datecurrent =$1 ;`,
         args: [id],
       });
-      if (result.rows.toString() === "") {
+      if (KpiminorList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p) => {
-          // let obj: any = new Object()
-          result.rowDescription.columns.map((el, i) => {
-            KpiminorList[el.name] = p[i];
-          });
-          // customerList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return Kpiminor.prepare(KpiminorList);
+    return KpiminorList.rows;
   }
   static async findAll(): Promise<Kpiminor[] | null> {
-    const KpiminorList: any = new Array();
+    await client.connect();
+    var KpiminorList: any = new Array();
     try {
-      await client.connect();
-      const result = await client.query({
-        text: `SELECT * FROM kpiminor`,
+      KpiminorList = await client.queryObject({
+        text: `SELECT * FROM kpiminor order by datecurrent`,
         args: [],
       });
-      if (result.rows.toString() === "") {
+      if (KpiminorList.rows.toString() === "") {
         return null;
-      } else {
-        result.rows.map((p: any, j: any) => {
-          let obj: any = new Object();
-          result.rowDescription.columns.map((el: any, i: any) => {
-            obj.index = j + 1;
-            obj[el.name] = p[i];
-          });
-          KpiminorList.push(obj);
-        });
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
       return null;
     } finally {
       await client.end();
     }
-    return KpiminorList.map((mahine: any) => Kpiminor.prepare(mahine));
+    return KpiminorList.rows;
   }
   async createkpimain() {
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text: `INSERT INTO kpiminor (id,datecurrent,create_date,create_by)
           VALUES ($1, $2, $3, $4);`,
         args: [
@@ -82,7 +65,7 @@ export default class Kpiminor {
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
@@ -96,37 +79,24 @@ export default class Kpiminor {
   ) {
     this.id = id;
     this.datecurrent = datecurrent;
-    this.update_date = update_date;
     this.update_by = update_by;
+    await client.connect();
     try {
-      await client.connect();
-      const result: QueryResult = await client.query({
+      const result: QueryResult = await client.queryObject({
         text: `UPDATE kpiminor SET datecurrent=$2, update_date=$3, update_by=$4
           WHERE id=$1;`,
         args: [
           this.id,
           this.datecurrent,
-          this.update_date,
+          time().tz("asia/Jakarta").t,
           this.update_by,
         ],
       });
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     } finally {
       await client.end();
     }
     return this;
-  }
-  static prepare(data: any): Kpiminor {
-    const kpiminor = new Kpiminor(
-      data.id,
-      data.datecurrent,
-      data.create_date,
-      data.create_by,
-      data.update_date,
-      data.update_by,
-    );
-    kpiminor.index = data.index;
-    return kpiminor;
   }
 }

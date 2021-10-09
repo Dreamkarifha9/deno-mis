@@ -4,9 +4,12 @@
   "editor.formatOnSave": true,
   "deno.enableFormatter": true,
   "[typescript]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
+    "editor.defaultFormatter": "axetroy.vscode-deno",
   },
   "[typescriptreact]": {
-    "editor.defaultFormatter": "denoland.vscode-deno"
-  }
+    "editor.defaultFormatter": "axetroy.vscode-deno",
+  },
+  "vue3snippets.enable-compile-vue-file-on-did-save-code": false,
+  "deno.unstable": false,
+  "deno.import_map": "./path/to/import_map.json",
 }

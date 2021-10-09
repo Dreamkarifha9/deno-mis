@@ -1,12 +1,12 @@
 import {
-  RouterContext,
-  makeJwt,
-  Jose,
-  Payload,
-  setExpiration,
   bcrypt,
-  createHash,
   Client,
+  createHash,
+  Jose,
+  makeJwt,
+  Payload,
+  RouterContext,
+  setExpiration,
   v4,
 } from "../deps.ts";
 
@@ -25,21 +25,22 @@ export class AuthController {
   async login(ctx: RouterContext) {
     try {
       const body = await ctx.request.body();
+
       const value = await body.value;
+
       const username = value.username;
       const password = value.password;
       const hash = createHash("sha3-512");
       hash.update(password);
       const hashInHex = hash.toString();
       let passwordhashed = hashInHex;
-      console.log(username);
       if (!username || !password) {
         ctx.response.status = 422;
         ctx.response.body = { message: "Please provide email and password" };
         return;
       }
 
-      let user = await User.findByUsername(username);
+      var user: any = await User.findByUsername(username);
       if (!user) {
         ctx.response.status = 422;
         ctx.response.body = { message: "Incorrect username" };
@@ -47,7 +48,7 @@ export class AuthController {
       }
       const passwordMatched = await bcrypt.compareSync(
         passwordhashed,
-        user.password,
+        user[0].password,
       );
       if (!passwordMatched) {
         ctx.response.status = 422;
@@ -55,7 +56,7 @@ export class AuthController {
         return;
       }
       const payload: Payload = {
-        iss: user.username,
+        iss: user[0].username,
         exp: setExpiration(7200),
       };
       const header: Jose = {
@@ -66,25 +67,30 @@ export class AuthController {
       const jwtInputrefresh = {
         header: { typ: "JWT", alg: "HS256" as const },
         payload: {
-          iss: user.username,
+          iss: user[0].username,
           exp: setExpiration(10800),
         },
         key: keyrefresh,
       };
       //------ refresh token----------//
       const refreshToken = await makeJwt(jwtInputrefresh);
-      const response_data = {
-        "userId": user.user_id,
-        "refreshToken": refreshToken,
-      };
-      let arraytoken = tokenList.find((item) => {
-        return item.userId === user?.user_id;
+      let _user = await User.findByUserId(user[0].user_id);
+      _user = new User({
+        user_id: user[0].user_id,
+        name: "",
+        username: "",
+        employee_id: "",
+        password: "",
+        createby: "",
+        updateby: "",
+        is_active: true,
+        division: "",
+        roles: "",
+        permission: [],
+        refresh_token: refreshToken,
       });
-      if (arraytoken === undefined) {
-        tokenList.push(response_data);
-      } else {
-        arraytoken.refreshToken = refreshToken;
-      }
+      await _user.updaterefresh_token();
+
       // // update lastlogon
       // user = new User({
       //   user_id: user.user_id,
@@ -95,9 +101,15 @@ export class AuthController {
       // });
       // await user.lastLogin();
       // // console log user login
-      console.log("User Login :", user.username, " at :", new Date());
-      console.log("User :", token);
-      console.log(tokenList);
+
+      /// create current yearid
+      var now = new Date();
+      var currentyear = now.getFullYear();
+      currentyear = currentyear + 543;
+      console.log("currentyear", currentyear);
+
+      Object.assign(user, { currenty: currentyear });
+      console.log("user", user);
       ctx.response.status = 200;
       ctx.response.body = {
         success: true,
@@ -108,7 +120,14 @@ export class AuthController {
         auth: true,
       };
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
+    }
+  }
+  async getalluser(ctx: RouterContext) {
+    const listuser = await User.findAll();
+    if (listuser) {
+      ctx.response.status = 200;
+      ctx.response.body = listuser;
     }
   }
   async getUserRole(ctx: RouterContext) {
@@ -119,16 +138,36 @@ export class AuthController {
       ctx.response.body = roles;
     }
   }
+  async getJsonb(ctx: RouterContext) {
+    const roles = await User.findtest("test");
+
+    if (roles) {
+      // const result = JSON.parse(roles.json_b);
+      // console.log(roles.json_b);
+      // // roles.json_b.id
+      // roles.json_b.foreach((item: any) => {
+      //   console.log(item.id);
+      // });
+      // for (let item in roles.json_b) {
+      //   console.log(item);
+      // }
+      ctx.response.status = 200;
+      ctx.response.body = roles;
+    }
+  }
   async refreshtoken(ctx: RouterContext) {
     try {
       const body = await ctx.request.body();
       const value = await body.value;
       const userId = value.userId;
       const refreshToken = value.refreshToken;
-      const isToken = tokenList.find((e) => e.refreshToken === refreshToken);
-      console.log(isToken, refreshToken);
+
+      let _user: any = await User.findByUserId(userId);
+
+      const isToken = _user[0].refresh_token;
+
       if ((refreshToken) && (isToken !== undefined)) {
-        let user = await User.findByUserId(userId);
+        var user = await User.findByUserId(userId);
         if (!user) {
           ctx.response.status = 400;
           ctx.response.body = {
@@ -159,25 +198,22 @@ export class AuthController {
           };
           //------ refresh token----------//
           let refreshToken = await makeJwt(jwtInputrefresh);
-          const response_data = {
-            "userId": user.user_id,
-            "token": token,
-            "refreshToken": refreshToken,
-            "expiresIn": payload.exp,
-          };
-          tokenList.map((col, i) => {
-            if (col.userId == response_data.userId) {
-              tokenList[i].refreshToken = refreshToken;
-            }
-          });
 
-          // console log user login
-          console.log(
-            "User refreashtoken :",
-            user.username,
-            " at :",
-            new Date(),
-          );
+          user = new User({
+            user_id: userId,
+            name: "",
+            username: "",
+            employee_id: "",
+            password: "",
+            createby: "",
+            updateby: "",
+            is_active: true,
+            division: "",
+            roles: "",
+            permission: [],
+            refresh_token: refreshToken,
+          });
+          await user.updaterefresh_token();
 
           ctx.response.status = 200;
           ctx.response.body = {
@@ -195,7 +231,7 @@ export class AuthController {
           };
       }
     } catch (error) {
-      console.log(error.toString());
+      console.log(error);
     }
   }
   async register(ctx: RouterContext) {
@@ -209,9 +245,11 @@ export class AuthController {
     const createby = value.createby;
     const updateby = value.update;
     const is_active = value.is_active;
-    let user = await User.findByUsername(employee_id);
+    const division = value.division;
+    let user = await User.findByUsername(username);
 
     if (user) {
+      console.log("inn");
       ctx.response.status = 422;
       ctx.response.body = { message: "Username is already used" };
     } else {
@@ -231,14 +269,89 @@ export class AuthController {
         createby,
         updateby,
         is_active,
+        division,
       });
       await user.save();
-      ctx.response.status = 201;
+      ctx.response.status = 200;
       ctx.response.body = {
         id: user.user_id,
-        employee_id: user.employee_id,
+        name: user.name,
         username: user.username,
+        employee_id: user.employee_id,
+        password: user.password,
+        create: user.createby,
+        updateby: user.updateby,
+        is_active: user.is_active,
+        division,
       };
+    }
+  }
+
+  async updatepassword(ctx: RouterContext) {
+    try {
+      const id: string = ctx.params.id!;
+      const body = await ctx.request.body();
+      const value = await body.value;
+      const password = value.password;
+      const updateby = value.update_by;
+
+      //*------------------ SET HAS PASSWORD //*------------------------
+      let salt = await bcrypt.genSaltSync(8);
+      const hash = createHash("sha3-512");
+      hash.update(password);
+      const hashInHex = hash.toString();
+      let passwordhash = hashInHex;
+      const hashedPassword = await bcrypt.hashSync(passwordhash, salt);
+      //*-------------------------------------------------------------------
+      let user = await User.findByUserId(id);
+      user = new User({
+        user_id: id,
+        name: "",
+        username: "",
+        employee_id: "",
+        password: hashedPassword,
+        createby: "",
+        updateby: updateby,
+        is_active: true,
+        division: "",
+        roles: "",
+        permission: [],
+      });
+      console.log("user", user);
+      await user.updatepassword();
+      ctx.response.status = 201;
+      ctx.response.body = user;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+  async update(ctx: RouterContext) {
+    try {
+      const id: string = ctx.params.id!;
+      const body = await ctx.request.body();
+      const value = await body.value;
+      const permission = value.permission;
+      const update_date = new Date();
+      const update_by = value.updateby;
+      let user = await User.findByUserId(id);
+      user = new User({
+        user_id: id,
+        name: "",
+        username: "",
+        employee_id: "",
+        password: "",
+        createby: "",
+        updateby: update_by,
+        is_active: true,
+        division: "",
+        roles: "",
+        permission: permission,
+      });
+      await user.update();
+      ctx.response.status = 200;
+      ctx.response.body = user;
+    } catch (error) {
+      console.log(error);
     }
   }
 }

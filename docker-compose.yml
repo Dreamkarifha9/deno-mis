@@ -3,7 +3,7 @@ version: "3.7"
 services:
   deno:
     image: "deno-docker-mis"
-    container_name: deno.js
+    container_name: denots
     build: .
     volumes:
       - ./uploads:/app/uploads
@@ -12,10 +12,14 @@ services:
       - ./Kpimain:/app/Kpimain
       - ./Kpiminor:/app/Kpiminor
       - ./uploadhistory:/app/uploadhistory
+      - ./Dailyreport:/app/Dailyreport
+      - ./uploadrepairhistorymachine:/app/uploadrepairhistorymachine
+    restart: always
     ports:
       - "8000:8000"
     networks:
       - deno
+
 volumes:
   uploads:
     driver: local

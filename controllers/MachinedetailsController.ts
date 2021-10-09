@@ -10,6 +10,86 @@ export class MachinedetailsController {
       ctx.response.body = machineall;
     }
   }
+  async getAllmachinebyid(ctx: RouterContext) {
+    const body = await ctx.request.body();
+    const value = await body.value;
+    const data = value.listmachine;
+    const machineall = await Machinedetails.findallbyid(data);
+    if (machineall) {
+      ctx.response.status = 200;
+      ctx.response.body = machineall;
+    }
+  }
+  async createexcel(ctx: RouterContext) {
+    const body = await ctx.request.body();
+    const value = await body.value;
+
+    const create_date = new Date();
+    const arraylist = new Array();
+    //*************** ข้อควรระวัง อย่าไป ลบ ข้อมูล machinedetails id pk ออก เพราะมันเชื่อมกับ machineactivity กิจกรรมอยู่ เพิ่มได้อย่างเดียว อย่าลบ */
+    try {
+      const readfile = await Deno.open(
+        "files/อะไหล่รวม part 4.csv",
+      );
+
+      // for await (const obj of readCSVObjects(readfile)) {
+      //   arraylist.push(obj);
+      // }
+      // readfile.close();
+      // const maparr = arraylist.map((item) => ({
+      //   idmachine: item.idmachine.trim(),
+      //   orders: item.orders.trim(),
+      //   name: item.name.trim(),
+      //   unit: item.unit.trim(),
+      //   idproduct: item.idproduct.trim(),
+      //   w3: item.w3,
+      //   m1: item.m1,
+      //   m3: item.m3,
+      //   y1: item.y1,
+      //   y2: item.y2,
+      //   y3: item.y3,
+      //   oh: item.oh,
+      //   number: item.number,
+      // }));
+      // for await (const item of maparr) {
+      //   // const machine: Machine | null = await Machine.findOne(
+      //   //   item.idmachine,
+      //   // );
+      //   // if (!machine) {
+
+      //   // }
+      //   const run_id = v4.generate();
+      //   console.log("run_id", run_id);
+      //   const machinedetails = new Machinedetails(
+      //     run_id,
+      //     item.idmachine,
+      //     item.orders,
+      //     item.name,
+      //     item.unit,
+      //     item.idproduct,
+      //     item.w3,
+      //     item.m1,
+      //     item.m3,
+      //     item.y1,
+      //     item.y2,
+      //     item.y3,
+      //     item.oh,
+      //     item.number,
+      //     create_date,
+      //     "Admin",
+      //     create_date,
+      //     "Admin",
+      //   );
+      //   await machinedetails.create();
+      // }
+    } catch (error) {
+      console.log(error);
+    }
+
+    ctx.response.status = 201;
+    // ctx.response.body = point;
+  }
+
   async create(ctx: RouterContext) {
     const body = await ctx.request.body();
     const value = await body.value;
@@ -79,7 +159,7 @@ export class MachinedetailsController {
         ctx.response.body = { message: "Invalid Customer ID" };
         return;
       }
-      await machine.update(
+      const result = await Machinedetails.update(
         id,
         idmachine,
         orders,
@@ -98,7 +178,6 @@ export class MachinedetailsController {
         update_by,
       );
       ctx.response.status = 200;
-      ctx.response.body = machine;
     } catch (error) {
       console.log(error);
     }
@@ -111,8 +190,13 @@ export class MachinedetailsController {
       ctx.response.body = { message: "Invalid customer ID" };
       return;
     }
-    await machine.delete();
-    ctx.response.status = 200;
+    try {
+      const result = await Machinedetails.delete(id);
+      if (!result) return;
+      ctx.response.status = 200;
+    } catch (error) {
+      ctx.response.status = 404;
+    }
   }
 }
 

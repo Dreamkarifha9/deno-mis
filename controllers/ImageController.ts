@@ -83,18 +83,25 @@ export class ImageController {
     // ctx.response.headers.set("Content-Type", "image/png");
   }
   async delectimage(ctx: RouterContext) {
-    const id: string = ctx.params.id!;
-    const machine: Imagechine | null = await Imagechine.findOneid(id);
-    if (!machine) {
-      ctx.response.status = 404;
-      ctx.response.body = { message: "Invalid ID" };
-      return;
+    try {
+      const id: string = ctx.params.id!;
+      const machine: any | null = await Imagechine.findOneid(id);
+
+      if (!machine) {
+        ctx.response.status = 404;
+        ctx.response.body = { message: "Invalid ID" };
+        return;
+      }
+      let result = await Imagechine.delete(id);
+      if (!result) return;
+      const imageFilePath = "uploads";
+      const fullfilepath = `${imageFilePath}/${machine[0].pathimage}`;
+      await Deno.remove(fullfilepath);
+      ctx.response.status = 200;
+    } catch (error) {
+      console.log(error);
+      throw error;
     }
-    await machine.delete();
-    const imageFilePath = "uploads";
-    const fullfilepath = `${imageFilePath}/${machine.pathimage}`;
-    await Deno.remove(fullfilepath);
-    ctx.response.status = 200;
   }
 }
 
