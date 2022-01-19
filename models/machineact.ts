@@ -91,10 +91,10 @@ export default class Machineact {
     try {
       RegisterList = await client.queryObject({
         text:
-          `SELECT machineact.id,machineactivity.description,machineactivity.standard, machineact.actyear, machineact.actmonth,machineact.idmachine,
+          `SELECT  machineact.id,machineactivity.description,machineactivity.standard, machineact.actyear, machineact.actmonth,machineact.idmachine,
               machineact.actid, season.id as sid FROM machineact
               LEFT JOIN machineactivity on machineactivity.id = machineact.actid
-              LEFT JOIN season on season.id = machineactivity.season_id WHERE actid = $1 and actyear= $2 and actmonth= $3 and idmachine= $4 and season.id = $5 ;`,
+              LEFT JOIN season on season.id = machineactivity.season_id WHERE actid = $1 and actyear= $2 and actmonth= $3 and idmachine= $4 and season.id = $5 LIMIT 1 ;`,
         args: [actid, actyear, actmonth, idmachine, season_id],
       });
       if (RegisterList.rows.toString() === "") {

@@ -30,6 +30,7 @@ export class KpimainController {
     const division_status = Boolean(ctx.params.id!);
 
     const kpimainall = await Kpimain.findAlldivision_statusall(division_status);
+    console.log("kpimainall", kpimainall);
     if (kpimainall) {
       ctx.response.status = 200;
       ctx.response.body = kpimainall;

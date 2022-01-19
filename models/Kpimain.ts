@@ -47,7 +47,7 @@ export default class Kpimain {
     try {
       KpimainList = await client.queryObject({
         text:
-          `SELECT kpimain.id,kpimain.datecurrent,kpimain.division_status,kpimain.division_fk,division.divisionname FROM public.kpimain
+          `SELECT kpimain.id,kpimain.datecurrent,to_char(kpimain.datecurrent, 'YYYY') as groupdatecurrent,kpimain.division_status,kpimain.division_fk,division.divisionname FROM public.kpimain
         LEFT JOIN division on kpimain.division_fk = division.id
         ORDER BY datecurrent ASC `,
         args: [],
@@ -71,9 +71,9 @@ export default class Kpimain {
     try {
       KpimainList = await client.queryObject({
         text:
-          `SELECT kpimain.id,kpimain.datecurrent,kpimain.division_status,kpimain.division_fk,division.divisionname FROM public.kpimain
+          `SELECT kpimain.id,kpimain.datecurrent,to_char(kpimain.datecurrent, 'YYYY') as groupdatecurrent,kpimain.division_status,kpimain.division_fk,division.divisionname FROM public.kpimain
         LEFT JOIN division on kpimain.division_fk = division.id
-        ORDER BY datecurrent ASC LIMIT 15 `,
+        ORDER BY datecurrent ASC  `,
         args: [],
       });
 
@@ -95,7 +95,7 @@ export default class Kpimain {
     try {
       KpimainList = await client.queryObject({
         text:
-          `SELECT kpimain.id,kpimain.datecurrent,kpimain.division_status,kpimain.division_fk,division.divisionname FROM public.kpimain
+          `SELECT kpimain.id,kpimain.datecurrent,kpimain.datecurrent,to_char(kpimain.datecurrent, 'YYYY') as groupdatecurrent,kpimain.division_status,kpimain.division_fk,division.divisionname FROM public.kpimain
         LEFT JOIN division on kpimain.division_fk = division.id
         where division_fk = $1
         ORDER BY datecurrent ASC `,
@@ -121,7 +121,7 @@ export default class Kpimain {
     try {
       KpimainList = await client.queryObject({
         text:
-          `SELECT kpimain.id,kpimain.datecurrent,kpimain.division_status,kpimain.division_fk,division.divisionname FROM public.kpimain
+          `SELECT kpimain.id,kpimain.datecurrent,to_char(kpimain.datecurrent, 'YYYY') as groupdatecurrent,kpimain.division_status,kpimain.division_fk,division.divisionname FROM public.kpimain
           LEFT JOIN division on kpimain.division_fk = division.id
           where division_statusall = $1
           ORDER BY datecurrent ASC `,

@@ -117,6 +117,9 @@ export class MachineactController {
         item.season_id,
       );
       if (checkmachineact) {
+        console.log(
+          `dupicatedata >>>>${checkmachineact.actid} >>> ${checkmachineact.idmachine}`,
+        );
         continue;
       }
 
